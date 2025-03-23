@@ -46,7 +46,7 @@
 #define NUM_CHAIRS   8
 
 /* Tempo maximo (em ms) que um cliente espera pelo primeiro recurso (PC) antes de desistir */
-#define MAX_WAIT_BEFORE_GIVEUP 3000
+#define MAX_WAIT_BEFORE_GIVEUP 1500
 
 /* -----------
    Parametros de simulacao
@@ -104,7 +104,7 @@ int starvedClients = 0;          // quantos desistiram antes de conseguir o PC
 /* Parametros globais da simulacao */
 SimulationParameters gParams = {
     .minClients    = 20,
-    .maxClients    = 50,
+    .maxClients    = 120,
     .openHours     = 8,
     .forceDeadlock = 0,
     .verbosity     = 0
@@ -342,12 +342,11 @@ int main(int argc, char** argv) {
 
     printf("=== CYBERFLUX SIMULADOR ===\n");
     printf("Parametros:\n");
-    printf(" minClients = %d\n", gParams.minClients);
-    printf(" maxClients = %d\n", gParams.maxClients);
-    printf(" openHours  = %d\n", gParams.openHours);
-    printf(" forceDeadlock = %d\n", gParams.forceDeadlock);
-    printf(" verbosity     = %d\n", gParams.verbosity);
-    printf(" -> totalClientsToCreate = %d (gerado aleatoriamente)\n\n", totalClientsToCreate);
+    printf(" Mínimo de clientes: %d\n", gParams.minClients);
+    printf(" Máximo de clientes: %d\n", gParams.maxClients);
+    printf(" Tempo de funcionamento do café: %d\n", gParams.openHours);
+    printf(" Verbosidade (1=detalhado, 0=QUASE NADA): %d\n", gParams.verbosity);
+    printf(" Forçar Deadlock? (1=sim, 0=não): %d\n", gParams.forceDeadlock);
 
     /* Inicializa semaforos */
     sem_init(&semComputer, 0, NUM_PCS);
