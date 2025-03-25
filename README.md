@@ -1,39 +1,39 @@
 # CyberFlux - Simulador de Cyber Café Multithread
 
-Este repositório contém o código-fonte do trabalho da graduação para a disciplina de Sistemas Operacionais. O projeto, intitulado **CyberFlux**, simula o funcionamento de um cyber café futurista, onde clientes de diferentes tipos competem por recursos limitados.
+Este repositório contém o código-fonte do projeto desenvolvido para a disciplina de Sistemas Operacionais. O projeto, intitulado **CyberFlux**, simula o funcionamento de um cyber café futurista, onde diferentes tipos de clientes competem por recursos limitados usando threads e semáforos.
 
 ## Descrição do Trabalho
 
-O **CyberFlux** simula um cyber café com os seguintes recursos fixos:
+O **CyberFlux** simula um cyber café com recursos limitados, que são:
 - **10 PCs**
 - **6 Headsets VR**
-- **8 Cadeiras**
+- **8 Cadeiras ergonômicas (GC - Gaming Chairs)**
 
 Os clientes são representados por threads e classificados em três tipos:
 
-- **Gamer**: Necessita obrigatoriamente de um PC e de um headset VR; tenta adquirir uma cadeira de forma opcional.
-- **Freelancer**: Necessita obrigatoriamente de um PC e de uma cadeira; tenta adquirir um headset VR de forma opcional.
-- **Student**: Necessita apenas de um PC.
+- **GAMER**: Precisa obrigatoriamente de PC, headset VR e cadeira.
+- **FREELANCER**: Precisa obrigatoriamente de PC, cadeira e headset VR.
+- **STUDENT**: Precisa apenas de um PC.
 
-A simulação se comporta da seguinte forma:
-- O café permanece "aberto" por um período determinado (`openHours`), em que novos clientes são gerados.
-- O número total de clientes é determinado aleatoriamente em um intervalo configurável (`minClients` a `maxClients`).
-- Cada cliente tenta adquirir os recursos necessários seguindo uma ordem fixa (PC → cadeira → VR), para evitar deadlock.
-- Caso um cliente demore demais para obter o recurso principal (PC), ele desiste (simulando "falta de paciência").
-- Ao final da simulação, o programa exibe estatísticas como:
-    - Total de clientes atendidos
-    - Tempo médio de espera
-    - Número de clientes que desistiram
-    - Uso total de cada recurso
+A simulação funciona da seguinte forma:
+- O café permanece aberto por um período definido (`openHours`), com novos clientes sendo gerados ao longo deste período.
+- O número total de clientes gerados é definido aleatoriamente, dentro do intervalo configurado (`minClients` a `maxClients`).
+- Cada cliente tenta adquirir os recursos necessários simultaneamente (estratégia "All or Nothing"), garantindo que não haja aquisições parciais que poderiam levar ao deadlock.
+- Caso o cliente demore muito para conseguir um PC, ele desiste (simulando impaciência ou "starvation").
+- Ao fim da simulação, o programa exibe estatísticas detalhadas, incluindo:
+  - Número total de clientes atendidos
+  - Tempo médio de espera por recursos
+  - Número de clientes que desistiram (starvation)
+  - Número de vezes que cada recurso foi utilizado
 
 ## Requisitos
 
 - Sistema Linux ou Windows com WSL/MinGW (para compilação com GCC e pthreads)
-- GCC com suporte a pthread (ex.: `gcc` em Linux ou MSYS2/WSL no Windows)
+- GCC com suporte a pthread (ex.: `gcc` no Linux ou via MSYS2/WSL no Windows)
 
 ## Compilação
 
-No terminal, execute:
+Para compilar o projeto, execute no terminal:
 
 ```bash
 gcc cyberflux.c -o cyberflux -lpthread
@@ -41,47 +41,39 @@ gcc cyberflux.c -o cyberflux -lpthread
 
 ## Execução
 
-Após a compilação, execute o programa utilizando os parâmetros de linha de comando:
+Após compilar, rode o programa com os seguintes parâmetros:
 
 ```bash
 ./cyberflux [--clients-min N] [--clients-max N] [--open-hours H] [--force-deadlock 0|1] [--verbose N]
 ```
 
-### Parâmetros:
-- `--clients-min N`  
-  Define o número mínimo de clientes a serem gerados (default: 20).
-
-- `--clients-max N`  
-  Define o número máximo de clientes a serem gerados (default: 50).
-
-- `--open-hours H`  
-  Define as horas simuladas de funcionamento do café (default: 8).  
-  *Observação:* Cada "hora" simulada é comprimida em 3 segundos.
-
-- `--force-deadlock 0|1`  **(WIP, AINDA NÃO TÁ PRONTO)**
-  Ativa (1) ou desativa (0) a tentativa de forçar um cenário de quase-deadlock (default: 0).
-
-- `--verbose N`  
-  Define o nível de verbosidade (0 = mínimo, 1 = detalhado; default: 0).
-
-- `-h, --help`  
-  Exibe esta mensagem de ajuda.
+### Parâmetros disponíveis:
+- `--clients-min N`: Define o número mínimo de clientes a serem gerados (default: 20).
+- `--clients-max N`: Define o número máximo de clientes a serem gerados (default: 50).
+- `--open-hours H`: Define a duração simulada do cyber café em horas (cada "hora" simulada é aproximadamente 3 segundos reais; default: 8).
+- `--force-deadlock 0|1`: Configura o modo de alocação dos recursos. Com valor `0`, evita deadlocks usando a estratégia "All or Nothing"; com valor `1`, gera propositalmente um cenário com maior chance de deadlock (default: 0).
+- `--verbose N`: Controla a exibição de mensagens detalhadas (0 = mínimo, 1 = detalhado; default: 0).
+- `-h, --help`: Exibe a mensagem de ajuda.
 
 ### Exemplo de execução:
+
 ```bash
 ./cyberflux --clients-min 30 --clients-max 60 --open-hours 4 --force-deadlock 1 --verbose 1
 ```
 
+Neste exemplo, serão criados entre 30 e 60 clientes durante 4 horas simuladas, com mensagens detalhadas ativadas e o modo de alocação com potencial de deadlock.
+
 ## Funcionamento
 
-Durante a simulação, enquanto o café estiver aberto (definido por `openHours`), clientes são gerados aleatoriamente, com o número total de clientes sendo definido de forma aleatória entre `minClients` e `maxClients`. Cada cliente tenta adquirir os recursos conforme seu tipo. Se um cliente não conseguir adquirir o recurso principal (PC) em um tempo máximo (configurado internamente), ele desiste e é contabilizado como "starved" (desistiu).
+Durante a simulação, clientes chegam ao cyber café ao longo do dia, sendo criados aleatoriamente até atingir o total configurado. Cada cliente tenta adquirir simultaneamente os recursos necessários. Caso não consiga obter o PC dentro de um tempo limite, ele desiste (starvation).
 
-Ao final do período de funcionamento, o programa espera que todos os clientes criados terminem e exibe as estatísticas finais da simulação.
+No fim da simulação, o programa aguarda todas as threads finalizarem e exibe as estatísticas sobre os recursos e o atendimento.
 
-## TODO
+## Melhorias Futuras
 
-- [ ] Implementar de maneira completa uma situação que force deadlock com o intuito de testar a solução de deadlock.
+- [ ] Implementar mecanismos avançados de escalonamento para maior eficiência.
+- [ ] Adicionar novos recursos para aumentar a complexidade da simulação (impressoras, salas de reunião etc.).
 
 ## Considerações Finais
 
-Este trabalho foi desenvolvido como parte das atividades da disciplina de Sistemas Operacionais, visando aplicar conceitos de threads, sincronização e gerenciamento de recursos. O projeto foi implementado para permitir experimentos com diferentes parâmetros, possibilitando a análise de desempenho e comportamento em cenários variados.
+Este trabalho permitiu aplicar de forma prática conceitos importantes de Sistemas Operacionais, como threads, semáforos, concorrência, e sincronização, proporcionando uma melhor compreensão dos desafios relacionados ao gerenciamento eficiente de recursos concorrentes.
